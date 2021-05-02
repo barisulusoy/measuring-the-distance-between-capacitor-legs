@@ -1,12 +1,24 @@
 """
-****************************************************************************
+*******************************************************************************
 Barış Ulusoy
-1.05.2021
+2.05.2021-Pazar
 baris.ulusy@gmail.com
-****************************************************************************
-Kondansatör Bacaklarının Arasındaki Mesafenin Ölçümü
-(Measuring the Distance Between Capacitor Legs):
-****************************************************************************
+Elektrik-Elektronik Mühendisi
+*******************************************************************************
+Kondansatör Bacaklarının Arasındaki Mesafenin Ölçümü (main.py):
+- Bu modül içerisinde bulunan kodlar ile kapasitör bacakları arasındaki mesafe
+  piksel cinsinden ölçülmektedir. Ölçüm işlemi kapasitör bacaklarının en alt
+  noktasından 20 piksel yukarı gelen noktadan ve bacakların orta noktası bulunarak
+  hesaplanmıştır.
+- Okunan görüntüye sırasıyla GaussianBlur ve Canny yöntemleri uygulanmıştır.
+  Daha sonra kenarları bulunan kapasitörün contour alanları tespit edilmiştir.
+- Kenarların bulunduğu piksel koordinatları 'coordinatesOfEdges' dizisi içerisinde
+  tutulmaktadır.
+- 'find_point' metodu ile kapasitörün sol ve sağ bacağındaki istenilen noktaların
+  koordinatları bulunmaktadır.
+- 'find_distance' metodu ile kapasitör bacakları arasındaki mesafe piksel cinsinden
+  hesaplanmaktadır.
+*******************************************************************************
 """
 
 import cv2
@@ -16,20 +28,15 @@ import time
 
 class DistanceCalculation:
 
-
     def __init__(self):
 
         ## ==> Görütünün okunması
         self.image = cv2.imread("image_input/IP1_Cap.jpg")
 
-        ## ==> İkici kez görüntü okuma
-        self.cont = False
-        self.path = ""
-
-        ## ==> Mesafe'nin tutulduğu değişkenin tanımlanması
+        ## ==> Mesafe'nin tutulduğu attribute'ün tanımlanması
         self.distance = 0
 
-        ## ==> Toplam çalışma zamanının tutulduğu değişkenin tanımlanması
+        ## ==> Toplam çalışma zamanının tutulduğu attribute'ün tanımlanması
         self.totalRuntime = 0
 
         ## ==> Roi sınırlarının belirlenmesi
@@ -41,7 +48,6 @@ class DistanceCalculation:
     def image_processing(self):
         """
         Görüntü işlemenin yapıldığı metot.
-        :return image:
         """
 
         ## ==> Programın başlangıç zamanının belirlenmesi
@@ -56,7 +62,6 @@ class DistanceCalculation:
 
         ## ==> Canny kenar bulma yönteminin kullanılarak kenarların bulunması.
         edges = cv2.Canny(gaussSmoothing, 100, 200)
-        cv2.imshow("edges", edges)
 
         ## ==> nonzero() fonksiyonu matris içerisinde bulunan değeri sıfır olmayan indexleri döndürmektedir.
         ##     İlk olarak y ekseni döndürülür.
@@ -67,14 +72,16 @@ class DistanceCalculation:
         ## ==> Contour bulma işlemi.
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-        ## ==>  Kapasitörün sol ve sağ bacağındaki istenilen noktaların bulunduğu methodun çağrılması.
+        ## ==>  Kapasitörün sol ve sağ bacağındaki istenilen noktaların bulunmasını sağlayan metodun çağrılması.
         leftLegPoint, rightLegPoint = self.find_point(contours, coordinatesOfEdges)
 
-        ## ==> Kapasitör bacakları arasındaki mesafenin bulunduğu metodun çağrılması
+        ## ==> Kapasitör bacakları arasındaki mesafenin bulunmasını sağlayan metodun çağrılması.
         self.distance = self.find_distance(leftLegPoint, rightLegPoint)
+        print("****************************************************************")
         print("Kapasitör bacakları arasndaki mesafe(piksel):", self.distance)
 
-        ## ==> Kapasitörün bacakları arasındaki orta noktanın bulunması. Orta noktaya yazı yazdırabilmek için hesaplandı.
+        ## ==> Kapasitörün bacakları arasındaki orta noktanın bulunması sağlayan metodun çağrılması.
+        ##     Orta noktaya yazı yazdırabilmek için orta nokta hesaplanmıştır.
         midpoint_between_capacitor_legs = self.find_midpoint(leftLegPoint, rightLegPoint)
 
         ## ==> İstenilen koordinatara gerekli şekillerin çizilmesi.
@@ -94,20 +101,16 @@ class DistanceCalculation:
 
         ## ==> Toplam çalışma zamanının belirlenmesi
         self.totalRuntime = end_time - start_time
-
-        ## ==> Programın çalışma süresinin terminal'e bastırılması
         print("Program çalışma süresi(sn):", self.totalRuntime, "saniye")
-
-        ## ==> İşlenmiş görüntünün ekranda gösterilmesi
-        cv2.imshow("image", self.image)
+        print("****************************************************************")
 
     def find_point(self, _contours, _coordinatesOfEdges):
         """
-        İstenilen nokta koordinatların hesaplandığı method.
+        Kapasitörün sol ve sağ bacağındaki istenilen noktaların koordinatlarının bulunmasını
+        sağlayan metot.
         :param _contours:
         :param _coordinatesOfEdges:
         :return [x_coordinates_left_midpoint, y_coordinates_left_midpoint]:
-        :return [x_coordinates_right_midpoint, y_coordinates_right_midpoint]:
         """
 
         ## ==> Bulunan contour alanlarının geometrik merkezlerinin bulunması için gerekli
@@ -121,7 +124,7 @@ class DistanceCalculation:
             centroidCoordinates = (centroidCoordinates[0][0], centroidCoordinates[0][1])
 
         ## ==> 2 adet contour varsa iki adet geometri merkezi olduğu
-        ##     anlamına gelir bu iki geometri merkezinin orta noktası bulunur.
+        ##     anlamına gelir ve bu iki geometri merkezinin orta noktası bulunur.
         elif len(_contours) == 2:
 
             ## ==> Orta noktanın hesaplandığı metodun çağrılması
@@ -133,20 +136,23 @@ class DistanceCalculation:
         indexes_of_x_coordinates_left = np.where(_coordinatesOfEdges[1] < centroidCoordinates[0])[0]
         indexes_of_x_coordinates_right = np.where(_coordinatesOfEdges[1] >= centroidCoordinates[0])[0]
 
-        ## ==> Soldaki Kapasitör Bacağı
+        ## ==> Soldaki Kapasitör Bacağı => [midpoint_x_coordinate_of_left_leg, midpoint_y_coordinate_of_left_leg]
         ###############################
 
-        ## ==> Soldaki koordinatlar içerisindeki y ekseninin maks değeri sol bacağın y koordinatının maks değerini verir.
+        ## ==> Soldaki koordinatlar içerisindeki y ekseninin maks değeri, sol bacağın y koordinatının maks değerini verir.
         max_y_coordinate_of_left = np.amax(_coordinatesOfEdges[0][indexes_of_x_coordinates_left])
 
         ## ==> Sol kapasitör bacağının y eksenindeki istenilen orta nokta koordinatının bulunması
         midpoint_y_coordinate_of_left_leg = max_y_coordinate_of_left - 20
 
-        ## ==> Sol kapasitör bacağının y eksenindeki istenilen orta nokta koordinatınındaki x indexlerinin bulunması
+        ## ==> Sol kapasitör bacağının y eksenindeki istenilen orta nokta koordinatındaki x indexlerinin bulunması.
+        ##     Toplam 4 adet nokta bulunur [x1 x2 x3 x4]. Bu noktalardan iki tanesi sol bacağa, iki tanesi ise sağ
+        ##     bacağa düşmektedir.
         x_indexes_of_midpoint_y_coordinate_of_left_leg = np.where(_coordinatesOfEdges[0] ==
                                                                   midpoint_y_coordinate_of_left_leg)[0]
 
-        ## ==> Soldaki kapasitör bacağının, istenilen y koordinatında bulunan x koordinatlarının tutulduğu dizi
+        ## ==> Soldaki kapasitör bacağının, istenilen y koordinatında bulunan x koordinatlarının tutulduğu dizi.
+        ##     Sol bacağa düşen koordinatların x ekseni tutulur x_coord_left => [x1 x2].
         x_coord_left = []
 
         ## ==> Bulunan x koordinatların döngüye sokulması:
@@ -159,7 +165,7 @@ class DistanceCalculation:
         ## ==> Sol kapasitör bacağının x eksenindeki istenilen orta nokta koordinatının bulunması
         midpoint_x_coordinate_of_left_leg = int((x_coord_left[0] + x_coord_left[1])/2)
 
-        ## ==> Sağdaki Kapasitör Bacağı
+        ## ==> Sağdaki Kapasitör Bacağı => [midpoint_x_coordinate_of_right_leg, midpoint_y_coordinate_of_right_leg]
         ###############################
 
         ## ==> Sağdaki koordinatlar içerisindeki y ekseninin maks değeri sağ bacağın y koordinatının maks değerini verir.
@@ -169,10 +175,13 @@ class DistanceCalculation:
         midpoint_y_coordinate_of_right_leg = max_y_coordinate_of_right - 20
 
         ## ==> Sağ kapasitör bacağının y eksenindeki istenilen orta nokta koordinatınındaki x indexlerinin bulunması
+        ##     Toplam 4 adet nokta bulunur [x1 x2 x3 x4]. Bu noktalardan iki tanesi sol bacağa, iki tanesi ise sağ
+        ##     bacağa düşmektedir.
         x_indexes_of_midpoint_y_coordinate_of_right_leg = np.where(_coordinatesOfEdges[0] ==
                                                                   midpoint_y_coordinate_of_right_leg)[0]
 
-        ## ==> Sağdaki kapasitör bacağının, istenilen y koordinatında bulunan x koordinatlarının tutulduğu dizi
+        ## ==> Sağdaki kapasitör bacağının, istenilen y koordinatında bulunan x koordinatlarının tutulduğu dizi.
+        ##     Sol bacağa düşen koordinatların x ekseni tutulur x_coord_left => [x1 x2].
         x_coord_right = []
 
         ## ==> Bulunan x koordinatların döngüye sokulması:
@@ -195,7 +204,7 @@ class DistanceCalculation:
         :return centroidCoordinates:
         """
 
-        ## Geometri merkezlerinin tutulduğu dizinin oluşturulması
+        ## Geometri merkezlerinin tutulduğu dizinin oluşturulması.
         centroidCoordinates = []
 
         for (i, cnt) in enumerate(_contours):
@@ -212,7 +221,7 @@ class DistanceCalculation:
 
     def find_midpoint(self, _point1, _point2):
         """
-        İki noktası bilinen doğrunun orta noktasının hesaplandığı metod.
+        İki noktası bilinen doğru parçasının orta noktasının hesaplandığı metod.
         :param _point1:
         :param _point2:
         :return midpointCoordinates:
