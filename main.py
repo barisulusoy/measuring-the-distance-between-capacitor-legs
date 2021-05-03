@@ -10,7 +10,7 @@ Kondansatör Bacaklarının Arasındaki Mesafenin Ölçümü (main.py):
   piksel cinsinden ölçülmektedir. Ölçüm işlemi kapasitör bacaklarının en alt
   noktasından 20 piksel yukarı gelen noktadan ve bacakların orta noktası bulunarak
   hesaplanmıştır.
-- Okunan görüntüye sırasıyla GaussianBlur ve Canny yöntemleri uygulanmıştır.
+- Okunan görüntüye sırasıyla BilateralBlur ve Canny yöntemleri uygulanmıştır.
   Daha sonra kenarları bulunan kapasitörün contour alanları tespit edilmiştir.
 - Kenarların bulunduğu piksel koordinatları 'coordinatesOfEdges' dizisi içerisinde
   tutulmaktadır.
@@ -56,12 +56,12 @@ class DistanceCalculation:
         ## ==> Roi alma işlemi.
         roi = self.image[self.roiStartY:self.roiEndY, self.roiStartX:self.roiEndX]
 
-        ## ==> Yumuşatma işleminin uygulanması. Yumuşatma sayesinde kenarlar
+        ## ==> Bilateral işleminin uygulanması. Bilateral sayesinde kenarlar
         ##     daha belirgin hale getirilebilir.
-        gaussSmoothing = cv2.GaussianBlur(roi, (7, 7), 0)
+        bilateralSmoothing = cv2.bilateralFilter (roi, 9,75,75)
 
         ## ==> Canny kenar bulma yönteminin kullanılarak kenarların bulunması.
-        edges = cv2.Canny(gaussSmoothing, 100, 200)
+        edges = cv2.Canny(bilateralSmoothing, 100, 200)
 
         ## ==> nonzero() fonksiyonu matris içerisinde bulunan değeri sıfır olmayan indexleri döndürmektedir.
         ##     İlk olarak y ekseni döndürülür.
@@ -69,7 +69,7 @@ class DistanceCalculation:
         ## ==> coorcoordinatesOfEdges[0] => y koordinatları tutulur.
         coordinatesOfEdges = np.nonzero(edges)
 
-        ## ==> Contour bulma işlemi.
+        ## ==> Contour çıkarma işlemi.
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         ## ==>  Kapasitörün sol ve sağ bacağındaki istenilen noktaların bulunmasını sağlayan metodun çağrılması.
@@ -234,7 +234,7 @@ class DistanceCalculation:
 
     def find_distance(self, _point1, _point2):
         """
-        İki nokta arasındaki mesafenin bulunduğu metot.
+        İki nokta arasındaki mesafenin hipotenüs teoremi ile bulunduğu metot.
         :param _point1:
         :param _point2:
         :return result:
