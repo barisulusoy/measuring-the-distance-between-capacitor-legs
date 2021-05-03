@@ -177,6 +177,9 @@ aşağıdaki kod yazılır ve uygulama başlatılır.
 
 <img align="center" src="github_image/cmd.png">
 
+**NOT:** PIL kütüphanesi bilgisayarınızda mevcut değilse komut satırına **pip install image**
+yazarak indirebilirsiniz.
+
 **ui.py** modülü içerisinde kullanıcı arayüzü oluşturulmaktadır. Bu modül içerisinde oluşturulan 
 class main.py içerisinde bulunan class’dan kalıtım yapmaktadır. Arayüz sayesinde kapasitör 
 bacakları arasındaki mesafe ölçümü kolayca test edilmektedir. Arayüzün kısa bir tanıtımı 
